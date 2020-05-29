@@ -2,7 +2,6 @@
 import pygame
 import random
 from pygame.locals import *
-import numpy
 
 #import pygame.locals for easy key coordinate access
 from pygame.locals import (
@@ -13,8 +12,6 @@ from pygame.locals import (
         K_ESCAPE,
         KEYDOWN,
         QUIT,)
-
-
 #define screen constants
 screen_w=800
 screen_h=800
@@ -46,10 +43,6 @@ class Player(pygame.sprite.Sprite):
         if pressed_keys[K_RIGHT]:
             self.rect.move_ip(5, 0)
 
-
-
-
-
         #keep player on the screen
         if self.rect.left<0:
             self.rect.left=0
@@ -78,7 +71,7 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.move_ip(-5, 0)
         if pressed_keys[K_RIGHT]:
             self.rect.move_ip(5, 0)
-
+        #keeps enemy in field
         if self.rect.left<0:
             self.rect.left=0
         if self.rect.right>=screen_w:
@@ -111,7 +104,6 @@ class Ball(pygame.sprite.Sprite):
             self.acceleration=self.acceleration.reflect(self.acceleration)
         if player.rect.collidepoint(ball.top) == True:
             self.acceleration=self.acceleration.reflect(self.acceleration)
-
 
 #initalize game
 pygame.init()
