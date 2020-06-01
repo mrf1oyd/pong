@@ -52,6 +52,8 @@ class Player(pygame.sprite.Sprite):
             self.rect.top=400
         if self.rect.bottom >=screen_h:
             self.rect.bottom =screen_h
+        #if self.rect.top <= ball.bot:
+            #self.rect.top = ball.bot -1
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
@@ -87,14 +89,12 @@ class Ball(pygame.sprite.Sprite):
         self.surf = pygame.Surface((15,15))
         self.x = random.randint(300,450)
         self.y = random.randint(300,450)
-        self.center = vec(self.x,self.y)
-        self.top = (self.center + vec(0,14))
-        self.bot = (self.center - vec(0,14))
+        self.center = (self.x,self.y)
+        self.top = (self.x, self.y+14)
+        self.bot = (self.x, self.y-14)
         self.vel=vec(0,0)
         self.acceleration = vec(0,14)
     def update(self):
-        self.top = (self.center + vec(0,14))
-        self.bot = (self.center - vec(0,14))
         self.vel += self.acceleration
         self.vel.scale_to_length(ballspeed)
         self.center += self.vel
