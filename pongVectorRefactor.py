@@ -112,8 +112,8 @@ class Ball(pygame.sprite.Sprite):
         self.xc = random.randint(300,450)
         self.yc = random.randint(300,450)
         self.center = (self.xc,self.yc)
-        self.vel=vec(0,0)
-        self.acceleration = vec(0,14)
+        self.vel=vec(1,2)
+        #random.randint(-14,14)
     def update(self):
         self.edge = []
         for i in range(360):
@@ -121,14 +121,20 @@ class Ball(pygame.sprite.Sprite):
             self.x = int(self.center[0] + radius * math.cos(angle))
             self.y = int(self.center[1] + radius * math.sin(angle))
             point = vec(self.x,self.y)
+            if self.x == 800:
+                self.vel.x=self.vel.x * (-1)
+                self.vel.y=self.vel.y * (1)
+            if self.x == 0:
+                self.vel.x=self.vel.x * (-1)
+                self.vel.y=self.vel.y * (1)
             if enemy.rect.collidepoint(point) == True:
-                self.acceleration.reflect_ip(self.acceleration)
-                self.acceleration=self.acceleration+enemy.acceleration
+                self.vel.x=self.vel.x * (1)
+                self.vel.y=self.vel.y * (-1)
+                #self.vel=self.vel+enemy.vel
             if player.rect.collidepoint(point) == True:
-                self.acceleration.reflect_ip(self.acceleration)
-                self.acceleration=self.acceleration+player.acceleration
-        self.vel += self.acceleration
-        self.vel.scale_to_length(ballspeed)
+                self.vel.x=self.vel.x * (1)
+                self.vel.y=self.vel.y * (-1)
+                #self.vel=self.vel+player.vel
         self.center += self.vel
 #initalize game
 pygame.init()
@@ -144,6 +150,16 @@ ball = Ball()
 running = True
 ballinplay = True
 radius = 10
+
+#initialize the bounds
+boundsL=[]
+boundsR=[]
+for i in range(screen_h):
+    bounds_point = (0, i)
+    boundsL.append(bounds_point)
+for i in range(screen_h):
+    bounds_point = (screen_w, i)
+    boundsR.append(bounds_point)
 
 while running:
 
