@@ -2,6 +2,7 @@
 import pygame
 import random
 from pygame.locals import *
+import math
 
 #import pygame.locals for easy key coordinate access
 from pygame.locals import (
@@ -18,7 +19,8 @@ screen_h=800
 #define player constants
 player_width = 75
 player_height = 25
-ballspeed = 1
+playerspeed = 5
+ballspeed = 6
 
 vec = pygame.math.Vector2
 
@@ -30,18 +32,26 @@ class Player(pygame.sprite.Sprite):
         self.surf = pygame.Surface((player_width,player_height))
         self.surf.fill((255,255,255))
         self.rect = self.surf.get_rect()
-        self.rect =self.rect.move(400,800)
-        self.topedge = set()
+        self.rect = self.rect.move(400,800)
+        self.position=vec(self.rect.center)
+        self.vel=vec(random.randint(-5,5),random.randint(-5,5))
+        self.acceleration = vec(random.randint(-5,5),random.randint(-5,5))
+        self.rect.center = self.position
     def update(self, pressed_keys):
-        self.topedge.clear()
-        if pressed_keys[K_UP]:
-            self.rect.move_ip(0,-5)
-        if  pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, 5)
+        self.acceleration = vec(0,0)
+        self.vel = vec (0,0)
+        #if pressed_keys[K_UP]:
+            #self.acceleration.y = (-5)
+        #if  pressed_keys[K_DOWN]:
+            #self.acceleration.y = (5)
         if pressed_keys[K_LEFT]:
-            self.rect.move_ip(-5, 0)
+            self.acceleration.x = (-5)
         if pressed_keys[K_RIGHT]:
-            self.rect.move_ip(5, 0)
+            self.acceleration.x = (5)
+        self.vel += self.acceleration
+        self.position += self.vel
+        self.rect.center = self.position
+
 
         #keep player on the screen
         if self.rect.left<0:
@@ -62,47 +72,64 @@ class Enemy(pygame.sprite.Sprite):
         self.surf.fill((255,255,255))
         self.rect = self.surf.get_rect()
         self.rect =self.rect.move(400,0)
-        self.topedge=[]
+        self.position=vec(self.rect.center)
+        self.vel=vec(0,0)
+        self.acceleration = vec(0,0)
+        self.rect.center = self.position
+
     def update(self, pressed_keys):
-        self.topedge.clear()
-        if pressed_keys[K_UP]:
-            self.rect.move_ip(0,-5)
-        if  pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, 5)
+        self.acceleration = vec(0,0)
+        self.vel = vec (0,0)
+        #if pressed_keys[K_UP]:
+            #self.acceleration.y = (-5)
+        #if  pressed_keys[K_DOWN]:
+            #self.acceleration.y = (5)
         if pressed_keys[K_LEFT]:
-            self.rect.move_ip(-5, 0)
+            self.acceleration.x = (-5)
         if pressed_keys[K_RIGHT]:
-            self.rect.move_ip(5, 0)
-        #keeps enemy in field
+            self.acceleration.x = (5)
+        self.vel += self.acceleration
+        self.position += self.vel
+        self.rect.center = self.position
+
+
+        #keep player on the screen
         if self.rect.left<0:
             self.rect.left=0
         if self.rect.right>=screen_w:
             self.rect.right=screen_w
-        if self.rect.top<=0:
-            self.rect.top=0
-        if self.rect.bottom >=400:
-            self.rect.bottom =400
+        if self.rect.top<=400:
+            self.rect.top=400
+        if self.rect.bottom >=screen_h:
+            self.rect.bottom =screen_h
+        #if self.rect.top <= ball.bot:
+            #self.rect.top = ball.bot -1
 
 class Ball(pygame.sprite.Sprite):
     def __init__(self):
         super(Ball, self).__init__()
         self.surf = pygame.Surface((15,15))
-        self.x = random.randint(300,450)
-        self.y = random.randint(300,450)
-        self.center = (self.x,self.y)
+        self.xc = random.randint(300,450)
+        self.yc = random.randint(300,450)
+        self.center = (self.xc,self.yc)
         self.vel=vec(0,0)
         self.acceleration = vec(0,14)
     def update(self):
+        self.edge = []
+        for i in range(360):
+            angle = math.radians(i)
+            self.x = int(self.center[0] + radius * math.cos(angle))
+            self.y = int(self.center[1] + radius * math.sin(angle))
+            point = vec(self.x,self.y)
+            if enemy.rect.collidepoint(point) == True:
+                self.acceleration.reflect_ip(self.acceleration)
+                self.acceleration=self.acceleration+enemy.acceleration
+            if player.rect.collidepoint(point) == True:
+                self.acceleration.reflect_ip(self.acceleration)
+                self.acceleration=self.acceleration+player.acceleration
         self.vel += self.acceleration
         self.vel.scale_to_length(ballspeed)
         self.center += self.vel
-        self.top = (self.center + vec(0,14))
-        self.bot = (self.center - vec(0,14))
-        if enemy.rect.collidepoint(ball.bot) == True:
-            self.acceleration=self.acceleration.reflect(self.acceleration)
-        if player.rect.collidepoint(ball.top) == True:
-            self.acceleration=self.acceleration.reflect(self.acceleration)
-
 #initalize game
 pygame.init()
 #create screen object
