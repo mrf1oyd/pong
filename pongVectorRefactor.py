@@ -20,7 +20,6 @@ screen_h=800
 player_width = 75
 player_height = 25
 playerspeed = 5
-ballspeed = 6
 
 vec = pygame.math.Vector2
 
@@ -34,30 +33,29 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect()
         self.rect = self.rect.move(400,800)
         self.position=vec(self.rect.center)
-        self.vel=vec(random.randint(-5,5),random.randint(-5,5))
-        self.acceleration = vec(random.randint(-5,5),random.randint(-5,5))
+        self.vel= vec(0,0)
         self.rect.center = self.position
     def update(self, pressed_keys):
-        self.acceleration = vec(0,0)
-        self.vel = vec (0,0)
         #if pressed_keys[K_UP]:
             #self.acceleration.y = (-5)
         #if  pressed_keys[K_DOWN]:
             #self.acceleration.y = (5)
         if pressed_keys[K_LEFT]:
-            self.acceleration.x = (-5)
+            self.vel.x = (-playerspeed)
         if pressed_keys[K_RIGHT]:
-            self.acceleration.x = (5)
-        self.vel += self.acceleration
+            self.vel.x = (playerspeed)
         self.position += self.vel
         self.rect.center = self.position
+        self.vel=vec(0,0)
 
 
         #keep player on the screen
         if self.rect.left<0:
             self.rect.left=0
+            self.vel=vec(0,0)
         if self.rect.right>=screen_w:
             self.rect.right=screen_w
+            self.vel=vec(0,0)
         if self.rect.top<=400:
             self.rect.top=400
         if self.rect.bottom >=screen_h:
@@ -74,46 +72,45 @@ class Enemy(pygame.sprite.Sprite):
         self.rect =self.rect.move(400,0)
         self.position=vec(self.rect.center)
         self.vel=vec(0,0)
-        self.acceleration = vec(0,0)
         self.rect.center = self.position
+    def update(self, ball):
 
-    def update(self, pressed_keys):
-        self.acceleration = vec(0,0)
-        self.vel = vec (0,0)
-        #if pressed_keys[K_UP]:
-            #self.acceleration.y = (-5)
-        #if  pressed_keys[K_DOWN]:
-            #self.acceleration.y = (5)
-        if pressed_keys[K_LEFT]:
-            self.acceleration.x = (-5)
-        if pressed_keys[K_RIGHT]:
-            self.acceleration.x = (5)
-        self.vel += self.acceleration
+        self.ix = ball.center.x
+        self.iy = ball.center.y
+        ball.copyx = ball.center.x
+        ball.copyy = ball.center.y
+        if ball.center.y <= 770:
+            if self.iy > 0:
+                ball.copyx+=ball.vel.x
+                ball.copyy+=ball.vel.y
+                self.iy = ball.copyy
+            self.ix=ball.copyx
+        if self.position.x < self.ix:
+            self.vel.x = (playerspeed)
+        if self.position.x > self.ix:
+            self.vel.x = (-playerspeed)
         self.position += self.vel
         self.rect.center = self.position
+        self.vel=vec(0,0)
 
-
-        #keep player on the screen
+        #keep enemy on the screen
         if self.rect.left<0:
             self.rect.left=0
         if self.rect.right>=screen_w:
             self.rect.right=screen_w
-        if self.rect.top<=400:
-            self.rect.top=400
-        if self.rect.bottom >=screen_h:
-            self.rect.bottom =screen_h
-        #if self.rect.top <= ball.bot:
-            #self.rect.top = ball.bot -1
-
+        if self.rect.top<=0:
+            self.rect.top=0
+        if self.rect.bottom >=400:
+            self.rect.bottom =400
 class Ball(pygame.sprite.Sprite):
     def __init__(self):
         super(Ball, self).__init__()
         self.surf = pygame.Surface((15,15))
         self.xc = random.randint(300,450)
         self.yc = random.randint(300,450)
-        self.center = (self.xc,self.yc)
-        self.vel=vec(1,2)
-        #random.randint(-14,14)
+        self.center = vec(self.xc,self.yc)
+        self.vel=vec(random.randint(0,3),random.randint(1,5))
+        self.exists = True
     def update(self):
         self.edge = []
         for i in range(360):
@@ -121,21 +118,31 @@ class Ball(pygame.sprite.Sprite):
             self.x = int(self.center[0] + radius * math.cos(angle))
             self.y = int(self.center[1] + radius * math.sin(angle))
             point = vec(self.x,self.y)
+            #if ball collides with bounds on the right a reflection vector is generated
             if self.x == 800:
                 self.vel.x=self.vel.x * (-1)
                 self.vel.y=self.vel.y * (1)
+            #if ball collides with bounds on the left a refelection vector is generated
             if self.x == 0:
                 self.vel.x=self.vel.x * (-1)
                 self.vel.y=self.vel.y * (1)
+            #if enemy collides with ball a reflection vector is generated
             if enemy.rect.collidepoint(point) == True:
                 self.vel.x=self.vel.x * (1)
                 self.vel.y=self.vel.y * (-1)
-                #self.vel=self.vel+enemy.vel
+                self.vel=self.vel+(enemy.vel*.9)
+            #if player collides with ball a reflection vector is generated
             if player.rect.collidepoint(point) == True:
                 self.vel.x=self.vel.x * (1)
                 self.vel.y=self.vel.y * (-1)
-                #self.vel=self.vel+player.vel
+                self.vel=self.vel+(player.vel*.9)
+            #kills sprite if beyond top and bottom bounds
+            if self.y >= 800 or self.y<=0:
+                self.kill()
         self.center += self.vel
+
+
+
 #initalize game
 pygame.init()
 #create screen object
@@ -169,15 +176,19 @@ while running:
                 running = False
         elif event.type == QUIT:
             running = False
-    '''if enemy.rect.collidepoint(ball.bot) == True:
-        ball.physics_sim()
-    if player.rect.collidepoint(ball.top) == True:
-        ball.physics_sim()'''
+    #checks if ball exists if not instantiates a new one
+    if ball.center.y <= 0 or ball.center.y >= 800:
+        ball.kill()
+        pygame.display.update()
+        pygame.time.wait(250)
+        ball = Ball()
     ball.update()
     #get key pressed
     pressed_keys=pygame.key.get_pressed()
     #update player sprite with info on key pressed
     player.update(pressed_keys)
+    #update the enemy sprite with info from game
+    enemy.update(ball)
     #fill screen
     screen.fill((0,0,0))
     #draw player
