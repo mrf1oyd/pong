@@ -3,7 +3,6 @@ import pygame
 import random
 from pygame.locals import *
 import math
-
 #import pygame.locals for easy key coordinate access
 from pygame.locals import (
         K_UP,
@@ -23,7 +22,7 @@ playerspeed = 5
 
 vec = pygame.math.Vector2
 
-#define a player object
+#defines a player object
 #surface is now an attribute of player
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -32,20 +31,14 @@ class Player(pygame.sprite.Sprite):
         self.surf.fill((255,255,255))
         self.rect = self.surf.get_rect()
         self.rect = self.rect.move(400,800)
-        self.position=vec(self.rect.center)
-        self.vel= vec(0,0)
-        self.rect.center = self.position
+        self.rect.center=vec(self.rect.center)
+        self.vel=vec(0,0)
     def update(self, pressed_keys):
-        #if pressed_keys[K_UP]:
-            #self.acceleration.y = (-5)
-        #if  pressed_keys[K_DOWN]:
-            #self.acceleration.y = (5)
         if pressed_keys[K_LEFT]:
             self.vel.x = (-playerspeed)
         if pressed_keys[K_RIGHT]:
             self.vel.x = (playerspeed)
-        self.position += self.vel
-        self.rect.center = self.position
+        self.rect.center += self.vel
         self.vel=vec(0,0)
 
         #keep player on the screen
@@ -59,8 +52,6 @@ class Player(pygame.sprite.Sprite):
             self.rect.top=400
         if self.rect.bottom >=screen_h:
             self.rect.bottom =screen_h
-        #if self.rect.top <= ball.bot:
-            #self.rect.top = ball.bot -1
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
@@ -69,11 +60,11 @@ class Enemy(pygame.sprite.Sprite):
         self.surf.fill((255,255,255))
         self.rect = self.surf.get_rect()
         self.rect =self.rect.move(400,0)
-        self.position=vec(self.rect.center)
+        self.rect.center=vec(self.rect.center)
         self.vel=vec(0,0)
-        self.rect.center = self.position
+
     def update(self, ball):
-        #kindof a predictive algorithm. def a first pass
+        #kindof a predictive algorithm. def a first pass.
         #ix,iy reprepsents intersect x and y
         self.ix = ball.center.x
         self.iy = ball.center.y
@@ -86,14 +77,12 @@ class Enemy(pygame.sprite.Sprite):
                 ball.copyy+=ball.vel.y
                 self.iy = ball.copyy
             self.ix=ball.copyx
-        if self.position.x < self.ix:
+        if self.rect.x < self.ix:
             self.vel.x = (playerspeed)
-        if self.position.x > self.ix:
+        if self.rect.x > self.ix:
             self.vel.x = (-playerspeed)
-        self.position += self.vel
-        self.rect.center = self.position
+        self.rect.center += self.vel
         self.vel=vec(0,0)
-
         #keep enemy on the screen
         if self.rect.left<0:
             self.rect.left=0
@@ -112,37 +101,36 @@ class Ball(pygame.sprite.Sprite):
         self.center = vec(self.xc,self.yc)
         self.vel=vec(random.randint(0,3),random.randint(1,5))
         self.exists = True
+
     def update(self):
         self.edge = []
         for i in range(360):
             angle = math.radians(i)
             self.x = int(self.center[0] + radius * math.cos(angle))
             self.y = int(self.center[1] + radius * math.sin(angle))
-            point = vec(self.x,self.y)
-            #if ball collides with bounds on the right a reflection vector is generated
-            if self.x == 800:
+            point = (self.x,self.y)
+            #if ball collides with bounds on the right a reflection vector is generated.
+            if self.x >= 800:
                 self.vel.x=self.vel.x * (-1)
                 self.vel.y=self.vel.y * (1)
             #if ball collides with bounds on the left a refelection vector is generated
-            if self.x == 0:
+            if self.x <= 0:
                 self.vel.x=self.vel.x * (-1)
                 self.vel.y=self.vel.y * (1)
             #if enemy collides with ball a reflection vector is generated
             if enemy.rect.collidepoint(point) == True:
                 self.vel.x=self.vel.x * (1)
                 self.vel.y=self.vel.y * (-1)
-                self.vel=self.vel+(enemy.vel*.9)
+                self.vel=self.vel+enemy.vel
             #if player collides with ball a reflection vector is generated
             if player.rect.collidepoint(point) == True:
                 self.vel.x=self.vel.x * (1)
                 self.vel.y=self.vel.y * (-1)
-                self.vel=self.vel+(player.vel*.9)
+                self.vel=self.vel+player.vel
             #kills sprite if beyond top and bottom bounds
             if self.y >= 800 or self.y<=0:
                 self.kill()
         self.center += self.vel
-
-
 
 #initalize game
 pygame.init()
@@ -158,16 +146,6 @@ ball = Ball()
 running = True
 ballinplay = True
 radius = 10
-
-#initialize the bounds
-boundsL=[]
-boundsR=[]
-for i in range(screen_h):
-    bounds_point = (0, i)
-    boundsL.append(bounds_point)
-for i in range(screen_h):
-    bounds_point = (screen_w, i)
-    boundsR.append(bounds_point)
 
 while running:
 
