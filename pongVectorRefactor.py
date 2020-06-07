@@ -65,24 +65,16 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self, ball):
         #kindof a predictive algorithm. def a first pass.
-        #ix,iy reprepsents intersect x and y
-        self.ix = ball.center.x
-        self.iy = ball.center.y
-        ball.copyx = ball.center.x
-        ball.copyy = ball.center.y
-        # help delay tracking process? iterates a copy of x and y as an attempt to solve for when the ball will cross the y axis
-        if ball.center.y <= 770:
-            if self.iy > 0:
-                ball.copyx+=ball.vel.x
-                ball.copyy+=ball.vel.y
-                self.iy = ball.copyy
-            self.ix=ball.copyx
-        if self.rect.x < self.ix:
-            self.vel.x = (playerspeed)
-        if self.rect.x > self.ix:
-            self.vel.x = (-playerspeed)
-        self.rect.center += self.vel
-        self.vel=vec(0,0)
+        #ix,iy,ic reprepsents intersect x and y and center
+        ball.copycenter=ball.center
+        ball.copycenter.x=ball.center.x
+        ball.copycenter.y=ball.center.y
+        if ball.center.y <= 760 and ball.vel.y < 0:
+            if self.rect.centerx > ball.copycenter.x:
+                self.vel.x = (-playerspeed)
+            if self.rect.centerx < ball.copycenter.x:
+                self.vel.x = (playerspeed)
+            self.rect.center += self.vel
         #keep enemy on the screen
         if self.rect.left<0:
             self.rect.left=0
