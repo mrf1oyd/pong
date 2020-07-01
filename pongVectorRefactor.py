@@ -24,6 +24,11 @@ vec = pygame.math.Vector2
 
 #defines a player object
 #surface is now an attribute of player
+class Text():
+    def __init__(self, text, size, font_color, background_color=None):
+        self.font = pygame.font.Font(None, size)
+        self.surf = self.font.render(text, True, font_color, background_color)
+        self.rect = self.surf.get_rect()
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
@@ -56,34 +61,37 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
-        self.surf = pygame.Surface((75,25))
+        self.surf=pygame.Surface((75,25))
         self.surf.fill((255,255,255))
-        self.rect = self.surf.get_rect()
-        self.rect =self.rect.move(400,0)
+        self.rect=self.surf.get_rect()
+        self.rect=self.rect.move(400,0)
         self.rect.center=vec(self.rect.center)
         self.vel=vec(0,0)
 
     def update(self, ball):
         #kindof a predictive algorithm. def a first pass.
-        #ix,iy,ic reprepsents intersect x and y and center
         ball.copycenter=ball.center
         ball.copycenter.x=ball.center.x
         ball.copycenter.y=ball.center.y
+        if ball.center.y >=30 and ball.vel.y >0:
+            if (self.rect.centerx+100) > ball.copycenter.x:
+                self.vel.x = (-5)
+            if (self.rect.centerx-100) < ball.copycenter.x:
+                self.vel.x = (5)
+            self.rect.center+=self.vel
+            self.vel=vec(0,0)
         if ball.center.y <= 760 and ball.vel.y < 0:
-            if self.rect.centerx > ball.copycenter.x:
-                self.vel.x = (-playerspeed)
-            if self.rect.centerx < ball.copycenter.x:
-                self.vel.x = (playerspeed)
+            if (self.rect.centerx+30) > ball.copycenter.x+ball.vel.x+30:
+                self.vel.x = (-5)
+            if (self.rect.centerx-30) < ball.copycenter.x+ball.vel.x-30:
+                self.vel.x = (5)
             self.rect.center += self.vel
+            self.vel=vec(0,0)
         #keep enemy on the screen
         if self.rect.left<0:
             self.rect.left=0
         if self.rect.right>=screen_w:
             self.rect.right=screen_w
-        if self.rect.top<=0:
-            self.rect.top=0
-        if self.rect.bottom >=400:
-            self.rect.bottom =400
 class Ball(pygame.sprite.Sprite):
     def __init__(self):
         super(Ball, self).__init__()
@@ -91,7 +99,7 @@ class Ball(pygame.sprite.Sprite):
         self.xc = random.randint(300,450)
         self.yc = random.randint(300,450)
         self.center = vec(self.xc,self.yc)
-        self.vel=vec(random.randint(0,3),random.randint(1,5))
+        self.vel=vec(random.randint(1,3),random.randint(1,5))
         self.exists = True
 
     def update(self):
@@ -111,21 +119,20 @@ class Ball(pygame.sprite.Sprite):
                 self.vel.y=self.vel.y * (1)
             #if enemy collides with ball a reflection vector is generated
             if enemy.rect.collidepoint(point) == True:
-                self.vel.x=self.vel.x * (1)
-                self.vel.y=self.vel.y * (-1)
-                self.vel=self.vel+enemy.vel
+                self.vel.x=self.vel.x * (1)+.01
+                self.vel.y=self.vel.y * (-1)-.01
             #if player collides with ball a reflection vector is generated
             if player.rect.collidepoint(point) == True:
-                self.vel.x=self.vel.x * (1)
-                self.vel.y=self.vel.y * (-1)
-                self.vel=self.vel+player.vel
+                self.vel.x=self.vel.x * (1)+.01
+                self.vel.y=self.vel.y * (-1)-.01
             #kills sprite if beyond top and bottom bounds
             if self.y >= 800 or self.y<=0:
                 self.kill()
         self.center += self.vel
-
 #initalize game
 pygame.init()
+#initialize the font module
+pygame.font.init()
 #create screen object
 screen = pygame.display.set_mode([screen_w,screen_h])
 #instantiate player 1
@@ -135,9 +142,30 @@ enemy = Enemy()
 #instantiate the ball
 ball = Ball()
 #variable keeping game runing
-running = True
+running = False
 ballinplay = True
 radius = 10
+title = Text('PONG', 200, (255,255,255))
+title.rect.center = (400,200)
+instructions = Text('press enter to play', 25, (255,255,255))
+instructions.rect.center = (400,600)
+goalmessage = Text('GOAL!!', 200, (255,255,255))
+goalmessage.rect.center = (400,400)
+
+while running != True:
+    for event in pygame.event.get():
+        if event.type == KEYDOWN:
+            if event.key == K_RETURN:
+                running = True
+            if event.key == K_ESCAPE:
+                running = False
+        elif event.type == QUIT:
+            pygame.quit()
+    screen.fill((0,0,0))
+    screen.blit(title.surf, title.rect)
+    screen.blit(instructions.surf, instructions.rect)
+    #update display
+    pygame.display.flip()
 
 while running:
 
@@ -150,8 +178,9 @@ while running:
     #checks if ball exists if not instantiates a new one
     if ball.center.y <= 0 or ball.center.y >= 800:
         ball.kill()
+        screen.blit(goalmessage.surf, goalmessage.rect)
         pygame.display.update()
-        pygame.time.wait(250)
+        pygame.time.wait(300)
         ball = Ball()
     ball.update()
     #get key pressed
